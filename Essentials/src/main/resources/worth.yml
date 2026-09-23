@@ -184,3 +184,135 @@ worth:
   ironboots: 22.0
   step: 1.5
   sugar: 10.0
+
+  # Minecraft 26.3. Keys match Worth lookups: material name, lowercased, underscores removed.
+  # Poplar wood set
+  poplarlog: 2.0
+  strippedpoplarlog: 2.5
+  poplarwood: 2.0
+  strippedpoplarwood: 2.5
+  poplarplanks: 0.5
+  poplarstairs: 1.0
+  poplarslab: 1.5
+  poplarsign: 1.5
+  poplarhangingsign: 1.5
+  poplardoor: 2.0
+  poplartrapdoor: 1.5
+  poplarfence: 1.0
+  poplarfencegate: 2.0
+  poplarbutton: 1.0
+  poplarpressureplate: 1.0
+  poplarshelf: 2.0
+  poplarsapling: 2.0
+  poplarboat: 5.0
+  poplarchestboat: 8.0
+  orangepoplarleaves: 1.0
+  redpoplarleaves: 1.0
+  yellowpoplarleaves: 1.0
+  shelfmushroom: 2.0
+  redshrub: 1.0
+  strawbed: 15.0
+
+  # Cushions
+  blackcushion: 8.0
+  bluecushion: 8.0
+  browncushion: 8.0
+  cyancushion: 8.0
+  graycushion: 8.0
+  greencushion: 8.0
+  lightbluecushion: 8.0
+  lightgraycushion: 8.0
+  limecushion: 8.0
+  magentacushion: 8.0
+  orangecushion: 8.0
+  pinkcushion: 8.0
+  purplecushion: 8.0
+  redcushion: 8.0
+  whitecushion: 8.0
+  yellowcushion: 8.0
+
+  # Wool stairs and slabs
+  blackwoolstairs: 5.0
+  blackwoolslab: 4.0
+  bluewoolstairs: 5.0
+  bluewoolslab: 4.0
+  brownwoolstairs: 5.0
+  brownwoolslab: 4.0
+  cyanwoolstairs: 5.0
+  cyanwoolslab: 4.0
+  graywoolstairs: 5.0
+  graywoolslab: 4.0
+  greenwoolstairs: 5.0
+  greenwoolslab: 4.0
+  lightbluewoolstairs: 5.0
+  lightbluewoolslab: 4.0
+  lightgraywoolstairs: 5.0
+  lightgraywoolslab: 4.0
+  limewoolstairs: 5.0
+  limewoolslab: 4.0
+  magentawoolstairs: 5.0
+  magentawoolslab: 4.0
+  orangewoolstairs: 5.0
+  orangewoolslab: 4.0
+  pinkwoolstairs: 5.0
+  pinkwoolslab: 4.0
+  purplewoolstairs: 5.0
+  purplewoolslab: 4.0
+  redwoolstairs: 5.0
+  redwoolslab: 4.0
+  whitewoolstairs: 5.0
+  whitewoolslab: 4.0
+  yellowwoolstairs: 5.0
+  yellowwoolslab: 4.0
+
+  # Concrete stairs and slabs
+  blackconcretestairs: 2.0
+  blackconcreteslab: 1.5
+  blueconcretestairs: 2.0
+  blueconcreteslab: 1.5
+  brownconcretestairs: 2.0
+  brownconcreteslab: 1.5
+  cyanconcretestairs: 2.0
+  cyanconcreteslab: 1.5
+  grayconcretestairs: 2.0
+  grayconcreteslab: 1.5
+  greenconcretestairs: 2.0
+  greenconcreteslab: 1.5
+  lightblueconcretestairs: 2.0
+  lightblueconcreteslab: 1.5
+  lightgrayconcretestairs: 2.0
+  lightgrayconcreteslab: 1.5
+  limeconcretestairs: 2.0
+  limeconcreteslab: 1.5
+  magentaconcretestairs: 2.0
+  magentaconcreteslab: 1.5
+  orangeconcretestairs: 2.0
+  orangeconcreteslab: 1.5
+  pinkconcretestairs: 2.0
+  pinkconcreteslab: 1.5
+  purpleconcretestairs: 2.0
+  purpleconcreteslab: 1.5
+  redconcretestairs: 2.0
+  redconcreteslab: 1.5
+  whiteconcretestairs: 2.0
+  whiteconcreteslab: 1.5
+  yellowconcretestairs: 2.0
+  yellowconcreteslab: 1.5
+
+  # Explorer maps
+  abandonedcampmap: 40.0
+  buriedancientcitymap: 40.0
+  buriedmineshaftmap: 40.0
+  buriedtreasuremap: 40.0
+  buriedtrialchambersmap: 40.0
+  desertpyramidmap: 40.0
+  desertvillagemap: 40.0
+  junglepyramidmap: 40.0
+  oceanmonumentmap: 40.0
+  plainsvillagemap: 40.0
+  savannavillagemap: 40.0
+  snowyvillagemap: 40.0
+  swamphutmap: 40.0
+  taigavillagemap: 40.0
+  warmoceanruinsmap: 40.0
+  woodlandmansionmap: 40.0
