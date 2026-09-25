@@ -1027,6 +1027,7 @@ chat:
   # {TEAMNAME} - The sender's scoreboard team name.
   # {TEAMPREFIX} - The sender's scoreboard team prefix.
   # {TEAMSUFFIX} - The sender's scoreboard team suffix.
+  # {TEAMCOLOR} - The sender's scoreboard team color.
   #
   # Note: The {DISPLAYNAME} placeholder includes {PREFIX} and {SUFFIX} by default.
   # Using these together may result in double prefixes/suffixes in chat.

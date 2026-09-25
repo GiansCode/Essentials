@@ -680,10 +680,11 @@ public class Settings implements net.ess3.api.ISettings {
             configFormat = configFormat.replace("{TEAMPREFIX}", "{3}");
             configFormat = configFormat.replace("{TEAMSUFFIX}", "{4}");
             configFormat = configFormat.replace("{TEAMNAME}", "{5}");
-            configFormat = configFormat.replace("{PREFIX}", "{6}");
-            configFormat = configFormat.replace("{SUFFIX}", "{7}");
-            configFormat = configFormat.replace("{USERNAME}", "{8}");
-            configFormat = configFormat.replace("{NICKNAME}", "{9}");
+            configFormat = configFormat.replace("{TEAMCOLOR}", "{6}");
+            configFormat = configFormat.replace("{PREFIX}", "{7}");
+            configFormat = configFormat.replace("{SUFFIX}", "{8}");
+            configFormat = configFormat.replace("{USERNAME}", "{9}");
+            configFormat = configFormat.replace("{NICKNAME}", "{10}");
             configFormat = "§r".concat(configFormat);
             return configFormat;
         }

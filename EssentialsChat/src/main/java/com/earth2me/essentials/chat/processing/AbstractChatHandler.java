@@ -98,10 +98,11 @@ public abstract class AbstractChatHandler {
         format = format.replace("{3}", team == null ? "" : team.getPrefix().replace("%", "%%"));
         format = format.replace("{4}", team == null ? "" : team.getSuffix().replace("%", "%%"));
         format = format.replace("{5}", team == null ? "" : team.getDisplayName().replace("%", "%%"));
-        format = format.replace("{6}", prefix.replace("%", "%%"));
-        format = format.replace("{7}", suffix.replace("%", "%%"));
-        format = format.replace("{8}", username.replace("%", "%%"));
-        format = format.replace("{9}", (nickname == null ? username : nickname).replace("%", "%%"));
+        format = format.replace("{6}", team == null || team.getColor() == null ? "" : ("" + ChatColor.COLOR_CHAR + team.getColor().getChar()).replace("%", "%%"));
+        format = format.replace("{7}", prefix.replace("%", "%%"));
+        format = format.replace("{8}", suffix.replace("%", "%%"));
+        format = format.replace("{9}", username.replace("%", "%%"));
+        format = format.replace("{10}", (nickname == null ? username : nickname).replace("%", "%%"));
 
         // Local, shout and question chat types are only enabled when there's a valid radius
         if (chat.getRadius() > 0 && !event.getMessage().isEmpty()) {
