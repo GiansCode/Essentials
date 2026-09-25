@@ -31,7 +31,7 @@ public class AsyncTimedCommand implements Runnable {
         this.timer_started = System.currentTimeMillis();
         this.timer_delay = delay;
         this.timer_health = user.getBase().getHealth();
-        Location initLocation = user.getBase().getLocation();
+        final Location initLocation = user.getBase().getLocation();
         if (initLocation == null) {
             // Defensive: set to zero if location is null (could also throw or cancel)
             this.timer_initX = 0;
@@ -47,7 +47,7 @@ public class AsyncTimedCommand implements Runnable {
         this.timer_pattern = pattern;
         this.timer_canMove = user.isAuthorized("essentials.commandwarmups.move");
 
-        timer_task = ess.runTaskTimerAsynchronously(this, 20, 20);
+        timer_task = ess.scheduleEntityRepeatingTask(user.getBase(), this, 20, 20);
     }
 
     @Override
@@ -92,16 +92,12 @@ public class AsyncTimedCommand implements Runnable {
                         // This prevents the warmup check from triggering again
                         user.clearCommandWarmup(timer_pattern);
 
-                        // Execute the command by dispatching it to the server
-                        Bukkit.getScheduler().runTask(ess, () -> {
-                            try {
-                                // Execute as server command to bypass the warmup check
-                                Bukkit.dispatchCommand(user.getBase(), timer_command.substring(1)); // Remove the leading '/'
-                                user.sendTl("commandWarmupComplete");
-                            } catch (final Exception ex) {
-                                ess.showError(user.getSource(), ex, "\\ command warmup");
-                            }
-                        });
+                        try {
+                            Bukkit.dispatchCommand(user.getBase(), timer_command.substring(1));
+                            user.sendTl("commandWarmupComplete");
+                        } catch (final Exception ex) {
+                            ess.showError(user.getSource(), ex, "\\ command warmup");
+                        }
                     } catch (final Exception ex) {
                         ess.showError(user.getSource(), ex, "\\ command warmup");
                     }
@@ -109,7 +105,7 @@ public class AsyncTimedCommand implements Runnable {
             }
         }
 
-        ess.scheduleEntityDelayedTask(commandUser.getBase(), new DelayedCommandTask());
+        new DelayedCommandTask().run();
     }
 
     void cancelTimer(final boolean notifyUser) {

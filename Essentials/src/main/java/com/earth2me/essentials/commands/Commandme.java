@@ -13,9 +13,7 @@ import org.bukkit.World;
 import org.bukkit.entity.Player;
 
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 public class Commandme extends EssentialsCommand {
     public Commandme() {
@@ -40,61 +38,41 @@ public class Commandme extends EssentialsCommand {
         message = FormatUtil.formatMessage(user, "essentials.chat", message);
 
         user.setDisplayNick();
-        long radius = ess.getSettings().getChatRadius();
-        if (radius < 1) {
+        final long chatRadius = ess.getSettings().getChatRadius();
+        if (chatRadius < 1) {
             ess.broadcastTl("action", user.getDisplayName(), message);
             ess.getServer().getPluginManager().callEvent(new UserActionEvent(user, message, Collections.unmodifiableCollection(ess.getServer().getOnlinePlayers())));
             return;
         }
-        radius *= radius;
+        final long squaredRadius = chatRadius * chatRadius;
 
+        final String actionMessage = message;
         final World world = user.getWorld();
         final Location loc = user.getLocation();
-        final Set<User> outList = new HashSet<>();
 
-        for (final Player player : Bukkit.getOnlinePlayers()) {
-            final User onlineUser = ess.getUser(player);
-            if (!onlineUser.equals(user)) {
-                boolean abort = false;
-                final Location playerLoc = onlineUser.getLocation();
-                if (playerLoc.getWorld() != world) {
-                    abort = true;
-                } else if (onlineUser.isIgnoredPlayer(user)) {
-                    abort = true;
-                } else {
-                    final double delta = playerLoc.distanceSquared(loc);
-                    if (delta > radius) {
-                        abort = true;
-                    }
-                }
-                if (abort) {
-                    if (onlineUser.isAuthorized("essentials.chat.spy")) {
-                        outList.add(onlineUser); // Just use the same list unless we wanted to format spyying for this.
-                    }
-                } else {
-                    outList.add(onlineUser);
-                }
-            } else {
-                outList.add(onlineUser); // Add yourself to the list.
-            }
-        }
-
-        if (outList.size() < 2) {
+        if (ess.getOnlinePlayers().size() < 2) {
             user.sendTl("localNoOne");
         }
 
-        for (final User onlineUser : outList) {
-            onlineUser.sendTl("action", user.getDisplayName(), message);
-        }
-
-        // Only take the time to generate this list if there are listeners.
-        if (UserActionEvent.getHandlerList().getRegisteredListeners().length > 0) {
-            final Set<Player> outListPlayers = new HashSet<>();
-            for (final User onlineUser : outList) {
-                outListPlayers.add(onlineUser.getBase());
+        for (final Player player : Bukkit.getOnlinePlayers()) {
+            if (player.equals(user.getBase())) {
+                user.sendTl("action", user.getDisplayName(), actionMessage);
+                continue;
             }
-
-            ess.getServer().getPluginManager().callEvent(new UserActionEvent(user, message, Collections.unmodifiableCollection(outListPlayers)));
+            ess.runOnEntity(player, () -> {
+                final User onlineUser = ess.getUser(player);
+                final Location playerLoc = onlineUser.getLocation();
+                final boolean differentWorld = playerLoc.getWorld() != world;
+                final boolean ignored = onlineUser.isIgnoredPlayer(user);
+                final boolean outOfRange = !differentWorld && playerLoc.distanceSquared(loc) > squaredRadius;
+                if (differentWorld || ignored || outOfRange) {
+                    if (onlineUser.isAuthorized("essentials.chat.spy")) {
+                        onlineUser.sendTl("action", user.getDisplayName(), actionMessage);
+                    }
+                    return;
+                }
+                onlineUser.sendTl("action", user.getDisplayName(), actionMessage);
+            });
         }
     }
 

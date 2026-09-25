@@ -17,11 +17,14 @@ public class Commandkickall extends EssentialsCommand {
         String kickReason = args.length > 0 ? getFinalArg(args, 0) : ess.getAdventureFacet().miniToLegacy(tlLiteral("kickDefault"));
         kickReason = FormatUtil.replaceFormat(kickReason.replace("\\n", "\n").replace("|", "\n"));
 
+        final String reason = kickReason;
         for (final Player onlinePlayer : ess.getOnlinePlayers()) {
             if (!sender.isPlayer() || !onlinePlayer.getName().equalsIgnoreCase(sender.getPlayer().getName())) {
-                if (!ess.getUser(onlinePlayer).isAuthorized("essentials.kickall.exempt")) {
-                    onlinePlayer.kickPlayer(kickReason);
-                }
+                ess.runOnEntity(onlinePlayer, () -> {
+                    if (!ess.getUser(onlinePlayer).isAuthorized("essentials.kickall.exempt")) {
+                        onlinePlayer.kickPlayer(reason);
+                    }
+                });
             }
         }
         sender.sendTl("kickedAll");

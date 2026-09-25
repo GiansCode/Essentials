@@ -56,7 +56,7 @@ public class AsyncTimedTeleport implements Runnable {
         this.timer_respawn = respawn;
         this.timer_canMove = user.isAuthorized("essentials.teleport.timer.move");
 
-        timer_task = ess.runTaskTimerAsynchronously(this, 20, 20);
+        timer_task = ess.scheduleEntityRepeatingTask(teleportUser.getBase(), this, 20, 20);
 
         if (future != null) {
             this.parentFuture = future;
@@ -74,7 +74,7 @@ public class AsyncTimedTeleport implements Runnable {
     @Override
     public void run() {
 
-        if (teleportOwner == null || !teleportOwner.getBase().isOnline() || teleportOwner.getBase().getLocation() == null) {
+        if (teleportOwner == null || teleportOwner.getBase() == null || !teleportOwner.getBase().isOnline()) {
             cancelTimer(false);
             return;
         }
@@ -143,7 +143,7 @@ public class AsyncTimedTeleport implements Runnable {
             }
         }
 
-        ess.scheduleEntityDelayedTask(teleportOwner.getBase(), new DelayedTeleportTask());
+        new DelayedTeleportTask().run();
     }
 
     //If we need to cancelTimer a pending teleportPlayer call this method

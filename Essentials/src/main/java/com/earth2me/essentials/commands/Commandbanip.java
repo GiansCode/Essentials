@@ -56,10 +56,13 @@ public class Commandbanip extends EssentialsCommand {
         ess.getServer().getBanList(BanList.Type.IP).addBan(ipAddress, banReason, null, senderName);
         ess.getLogger().log(Level.INFO, ess.getAdventureFacet().miniToLegacy(tlLiteral("playerBanIpAddress", senderDisplayName, ipAddress, banReason)));
 
+        final String bannedIp = ipAddress;
         for (final Player player : ess.getServer().getOnlinePlayers()) {
-            if (player.getAddress().getAddress().getHostAddress().equalsIgnoreCase(ipAddress)) {
-                player.kickPlayer(banDisplay);
-            }
+            ess.runOnEntity(player, () -> {
+                if (player.getAddress() != null && player.getAddress().getAddress().getHostAddress().equalsIgnoreCase(bannedIp)) {
+                    player.kickPlayer(banDisplay);
+                }
+            });
         }
 
         ess.broadcastTl(null, u -> !u.isAuthorized("essentials.banip.notify"), "playerBanIpAddress", senderDisplayName, ipAddress, banReason);

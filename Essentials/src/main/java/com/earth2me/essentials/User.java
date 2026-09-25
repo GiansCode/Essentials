@@ -30,6 +30,8 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Statistic;
 import org.bukkit.block.Block;
+import org.bukkit.entity.Creature;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
 import org.bukkit.inventory.ItemStack;
@@ -74,6 +76,7 @@ public class User extends UserData implements Comparable<User>, IMessageRecipien
 
     // User properties
     private transient boolean vanished;
+    private transient Boolean collidableBeforeVanish;
     private boolean hidden = false;
     private boolean leavingHidden = false;
     private boolean rightClickJump = false;
@@ -919,7 +922,7 @@ public class User extends UserData implements Comparable<User>, IMessageRecipien
                     }
                     // Replace placeholders in the command with actual values.
                     final String cmd = command.replace("{USERNAME}", getName()).replace("{KICKTIME}", String.valueOf(kickTime));
-                    ess.getServer().dispatchCommand(ess.getServer().getConsoleSender(), cmd);
+                    ess.scheduleGlobalDelayedTask(() -> ess.getServer().dispatchCommand(ess.getServer().getConsoleSender(), cmd));
                 }
             }
         }
@@ -1054,13 +1057,8 @@ public class User extends UserData implements Comparable<User>, IMessageRecipien
     @Override
     public void setVanished(final boolean set) {
         vanished = set;
+        ess.updateVanishVisibility(getBase(), set);
         if (set) {
-            for (final User user : ess.getOnlineUsers()) {
-                if (!user.isAuthorized("essentials.vanish.see")) {
-                    //noinspection deprecation
-                    user.getBase().hidePlayer(getBase());
-                }
-            }
             setHidden(true);
             lastVanishTime = System.currentTimeMillis();
             ess.getVanishedPlayersNew().add(getName());
@@ -1071,11 +1069,9 @@ public class User extends UserData implements Comparable<User>, IMessageRecipien
             if (ess.getSettings().sleepIgnoresVanishedPlayers()) {
                 getBase().setSleepingIgnored(true);
             }
+            setCollidableForVanish(true);
+            clearMobTargets();
         } else {
-            for (final Player p : ess.getOnlinePlayers()) {
-                //noinspection deprecation
-                p.showPlayer(getBase());
-            }
             setHidden(false);
             ess.getVanishedPlayersNew().remove(getName());
             this.getBase().setMetadata("vanished", new FixedMetadataValue(ess, false));
@@ -1084,6 +1080,33 @@ public class User extends UserData implements Comparable<User>, IMessageRecipien
             }
             if (ess.getSettings().sleepIgnoresVanishedPlayers() && !isAuthorized("essentials.sleepingignored")) {
                 getBase().setSleepingIgnored(false);
+            }
+            setCollidableForVanish(false);
+        }
+    }
+
+    private void setCollidableForVanish(final boolean vanished) {
+        if (!VersionUtil.getServerBukkitVersion().isHigherThanOrEqualTo(VersionUtil.v1_9_R01)) {
+            return;
+        }
+        if (vanished) {
+            collidableBeforeVanish = getBase().isCollidable();
+            if (collidableBeforeVanish) {
+                getBase().setCollidable(false);
+            }
+        } else if (collidableBeforeVanish != null) {
+            getBase().setCollidable(collidableBeforeVanish);
+            collidableBeforeVanish = null;
+        }
+    }
+
+    private void clearMobTargets() {
+        for (final Entity entity : getBase().getNearbyEntities(64, 64, 64)) {
+            if (entity instanceof Creature) {
+                final Creature creature = (Creature) entity;
+                if (getBase().equals(creature.getTarget())) {
+                    creature.setTarget(null);
+                }
             }
         }
     }

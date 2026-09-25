@@ -17,7 +17,7 @@ public class ItemGroupQuery {
     }
 
     public boolean contains(IEssentials ess, Material item){
-        Tag<Material> tag = Bukkit.getTag(Tag.REGISTRY_ITEMS, NamespacedKey.minecraft(itemGroup), Material.class);
+        final Tag<Material> tag = Bukkit.getTag(Tag.REGISTRY_ITEMS, NamespacedKey.minecraft(itemGroup), Material.class);
         if (tag != null && tag.isTagged(item)) {
             return true;
         }

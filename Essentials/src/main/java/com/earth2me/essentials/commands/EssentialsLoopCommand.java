@@ -29,7 +29,7 @@ public abstract class EssentialsLoopCommand extends EssentialsCommand {
         }
 
         if (sender.isPlayer() && (searchTerm.equals("@s") || searchTerm.equals("@p"))) {
-            userConsumer.accept((User) sender.getUser());
+            acceptUser(sender, (User) sender.getUser(), userConsumer);
             return;
         }
 
@@ -39,21 +39,18 @@ public abstract class EssentialsLoopCommand extends EssentialsCommand {
             if (matchedUser == null) {
                 throw new PlayerNotFoundException();
             }
-            userConsumer.accept(matchedUser);
+            acceptUser(sender, matchedUser, userConsumer);
         } else if (matchWildcards && searchTerm.contentEquals("**")) {
             for (final UUID u : ess.getUsers().getAllUserUUIDs()) {
                 final User user = ess.getUsers().loadUncachedUser(u);
                 if (user != null) {
-                    userConsumer.accept(user);
+                    acceptUser(sender, user, userConsumer);
                 }
             }
         } else if (matchWildcards && searchTerm.contentEquals("*")) {
             final boolean skipHidden = sender.isPlayer() && !ess.getUser(sender.getPlayer()).canInteractVanished();
             for (final User onlineUser : ess.getOnlineUsers()) {
-                if (skipHidden && onlineUser.isHidden(sender.getPlayer()) && onlineUser.isHiddenFrom(sender.getPlayer())) {
-                    continue;
-                }
-                userConsumer.accept(onlineUser);
+                acceptOnline(sender, onlineUser, skipHidden, userConsumer);
             }
         } else if (multipleStringMatches) {
             if (searchTerm.trim().length() < 3) {
@@ -62,15 +59,15 @@ public abstract class EssentialsLoopCommand extends EssentialsCommand {
             final List<Player> matchedPlayers = server.matchPlayer(searchTerm);
             if (matchedPlayers.isEmpty()) {
                 final User matchedUser = getPlayer(server, searchTerm, true, true);
-                userConsumer.accept(matchedUser);
+                acceptUser(sender, matchedUser, userConsumer);
             }
             for (final Player matchPlayer : matchedPlayers) {
                 final User matchedUser = ess.getUser(matchPlayer);
-                userConsumer.accept(matchedUser);
+                acceptUser(sender, matchedUser, userConsumer);
             }
         } else {
             final User user = getPlayer(server, searchTerm, true, true);
-            userConsumer.accept(user);
+            acceptUser(sender, user, userConsumer);
         }
     }
 
@@ -84,7 +81,7 @@ public abstract class EssentialsLoopCommand extends EssentialsCommand {
         }
 
         if (sender.isPlayer() && (searchTerm.equals("@s") || searchTerm.equals("@p"))) {
-            userConsumer.accept((User) sender.getUser());
+            acceptUser(sender, (User) sender.getUser(), userConsumer);
             return;
         }
 
@@ -92,10 +89,7 @@ public abstract class EssentialsLoopCommand extends EssentialsCommand {
 
         if (matchWildcards && (searchTerm.contentEquals("**") || searchTerm.contentEquals("*"))) {
             for (final User onlineUser : ess.getOnlineUsers()) {
-                if (skipHidden && onlineUser.isHidden(sender.getPlayer()) && onlineUser.isHiddenFrom(sender.getPlayer())) {
-                    continue;
-                }
-                userConsumer.accept(onlineUser);
+                acceptOnline(sender, onlineUser, skipHidden, userConsumer);
             }
         } else if (multipleStringMatches) {
             if (searchTerm.trim().length() < 2) {
@@ -106,24 +100,37 @@ public abstract class EssentialsLoopCommand extends EssentialsCommand {
 
             if (matchedPlayers.isEmpty()) {
                 final String matchText = searchTerm.toLowerCase(Locale.ENGLISH);
+                boolean scheduled = false;
                 for (final User player : ess.getOnlineUsers()) {
-                    if (skipHidden && player.isHidden(sender.getPlayer()) && player.isHiddenFrom(sender.getPlayer())) {
+                    final Player base = player.getBase();
+                    if (base != null && base.isOnline() && !ess.isEntityThread(base)) {
+                        scheduled = true;
+                        ess.scheduleEntityDelayedTask(base, () -> {
+                            try {
+                                final String displayName = FormatUtil.stripFormat(player.getDisplayName()).toLowerCase(Locale.ENGLISH);
+                                if (displayName.contains(matchText) && !shouldSkipHidden(sender, player, skipHidden)) {
+                                    userConsumer.accept(player);
+                                }
+                            } catch (final Exception ex) {
+                                showError(sender.getSender(), ex, getName());
+                            }
+                        });
                         continue;
                     }
                     final String displayName = FormatUtil.stripFormat(player.getDisplayName()).toLowerCase(Locale.ENGLISH);
-                    if (displayName.contains(matchText)) {
+                    if (displayName.contains(matchText) && acceptOnline(sender, player, skipHidden, userConsumer)) {
                         foundUser = true;
-                        userConsumer.accept(player);
                     }
+                }
+                if (scheduled) {
+                    foundUser = true;
                 }
             } else {
                 for (final Player matchPlayer : matchedPlayers) {
                     final User player = ess.getUser(matchPlayer);
-                    if (skipHidden && player.isHidden(sender.getPlayer()) && player.isHiddenFrom(sender.getPlayer())) {
-                        continue;
+                    if (acceptOnline(sender, player, skipHidden, userConsumer)) {
+                        foundUser = true;
                     }
-                    foundUser = true;
-                    userConsumer.accept(player);
                 }
             }
             if (!foundUser) {
@@ -131,8 +138,38 @@ public abstract class EssentialsLoopCommand extends EssentialsCommand {
             }
         } else {
             final User player = getPlayer(server, sender, searchTerm);
-            userConsumer.accept(player);
+            acceptUser(sender, player, userConsumer);
         }
+    }
+
+    private void acceptUser(final CommandSource sender, final User user, final UserConsumer userConsumer) throws NotEnoughArgumentsException, TranslatableException {
+        acceptOnline(sender, user, false, userConsumer);
+    }
+
+    private boolean acceptOnline(final CommandSource sender, final User user, final boolean skipHidden, final UserConsumer userConsumer) throws NotEnoughArgumentsException, TranslatableException {
+        final Player base = user.getBase();
+        if (base != null && base.isOnline() && !ess.isEntityThread(base)) {
+            ess.scheduleEntityDelayedTask(base, () -> {
+                try {
+                    if (shouldSkipHidden(sender, user, skipHidden)) {
+                        return;
+                    }
+                    userConsumer.accept(user);
+                } catch (final Exception ex) {
+                    showError(sender.getSender(), ex, getName());
+                }
+            });
+            return true;
+        }
+        if (shouldSkipHidden(sender, user, skipHidden)) {
+            return false;
+        }
+        userConsumer.accept(user);
+        return true;
+    }
+
+    private boolean shouldSkipHidden(final CommandSource sender, final User user, final boolean skipHidden) {
+        return skipHidden && sender.isPlayer() && user.isHidden(sender.getPlayer()) && user.isHiddenFrom(sender.getPlayer());
     }
 
     protected abstract void updatePlayer(Server server, CommandSource sender, User user, String[] args) throws NotEnoughArgumentsException, PlayerExemptException, ChargeException, MaxMoneyException;

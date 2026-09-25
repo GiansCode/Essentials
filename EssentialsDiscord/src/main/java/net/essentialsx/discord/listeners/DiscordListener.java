@@ -136,8 +136,11 @@ public class DiscordListener extends ListenerAdapter {
             formattedMessage = relayEvent.getFormattedMessage();
         }
 
+        final String outbound = formattedMessage;
         for (final IUser essUser : viewers) {
-            essUser.sendMessage(formattedMessage);
+            if (essUser.getBase() != null && essUser.getBase().isOnline()) {
+                plugin.getPlugin().getEss().runOnEntity(essUser.getBase(), () -> essUser.sendMessage(outbound));
+            }
         }
     }
 

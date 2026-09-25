@@ -977,7 +977,15 @@ public class Settings implements net.ess3.api.ISettings {
                 if (isDebug()) {
                     ess.getLogger().log(Level.INFO, "Syncing commands");
                 }
-                ess.scheduleGlobalDelayedTask(syncCommandsProvider::syncCommands);
+                ess.scheduleGlobalDelayedTask(() -> {
+                    if (com.earth2me.essentials.utils.VersionUtil.FOLIA) {
+                        for (final org.bukkit.entity.Player player : ess.getOnlinePlayers()) {
+                            ess.scheduleEntityDelayedTask(player, player::updateCommands);
+                        }
+                        return;
+                    }
+                    syncCommandsProvider.syncCommands();
+                });
             }
         }
 

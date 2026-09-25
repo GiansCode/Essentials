@@ -1,7 +1,6 @@
 package com.earth2me.essentials.craftbukkit;
 
 import com.earth2me.essentials.ItemGroupQuery;
-import com.earth2me.essentials.ItemGroups;
 import com.earth2me.essentials.utils.MaterialUtil;
 import com.earth2me.essentials.utils.VersionUtil;
 import net.ess3.api.IEssentials;

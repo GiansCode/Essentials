@@ -469,7 +469,13 @@ public class AsyncTeleport implements IAsyncTeleport {
     }
 
     private void initTimer(final long delay, final IUser teleportUser, final ITarget target, final Trade chargeFor, final TeleportCause cause, final boolean respawn, CompletableFuture<Boolean> future) {
-        timedTeleport = new AsyncTimedTeleport(teleportOwner, ess, this, delay, future, teleportUser, target, chargeFor, cause, respawn);
+        final Runnable start = () -> timedTeleport = new AsyncTimedTeleport(teleportOwner, ess, this, delay, future, teleportUser, target, chargeFor, cause, respawn);
+        final org.bukkit.entity.Player base = teleportUser.getBase();
+        if (base != null && !ess.isEntityThread(base)) {
+            ess.scheduleEntityDelayedTask(base, start);
+            return;
+        }
+        start.run();
     }
 
     public enum TeleportType {

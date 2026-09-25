@@ -77,7 +77,19 @@ public class Commandclearinventory extends EssentialsCommand {
         }
 
         for (final Player player : players) {
-            clearHandler(sender, player, args, offset, players.size() < EXTENDED_CAP);
+            if (ess.isEntityThread(player)) {
+                clearHandler(sender, player, args, offset, players.size() < EXTENDED_CAP);
+            } else {
+                final int clearOffset = offset;
+                final boolean showExtended = players.size() < EXTENDED_CAP;
+                ess.scheduleEntityDelayedTask(player, () -> {
+                    try {
+                        clearHandler(sender, player, args, clearOffset, showExtended);
+                    } catch (final Exception ex) {
+                        showError(sender.getSender(), ex, getName());
+                    }
+                });
+            }
         }
     }
 

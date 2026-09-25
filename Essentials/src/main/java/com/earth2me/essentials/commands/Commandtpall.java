@@ -30,16 +30,23 @@ public class Commandtpall extends EssentialsCommand {
 
     private void teleportAllPlayers(final Server server, final CommandSource sender, final User target, final String label) {
         sender.sendTl("teleportAll");
-        final Location loc = target.getLocation();
-        for (final User player : ess.getOnlineUsers()) {
-            if (target == player) {
-                continue;
+        ess.runOnEntity(target.getBase(), () -> {
+            final Location loc = target.getLocation().clone();
+            final String targetWorld = target.getWorld().getName();
+            final boolean checkWorldPerms = sender.getSender().equals(target.getBase()) && ess.getSettings().isWorldTeleportPermissions();
+            final boolean allowedWorld = !checkWorldPerms || target.isAuthorized("essentials.worlds." + targetWorld);
+            for (final User player : ess.getOnlineUsers()) {
+                if (target == player) {
+                    continue;
+                }
+                ess.runOnEntity(player.getBase(), () -> {
+                    if (checkWorldPerms && !allowedWorld && !player.getWorld().getName().equals(targetWorld)) {
+                        return;
+                    }
+                    player.getAsyncTeleport().now(loc, false, TeleportCause.COMMAND, getNewExceptionFuture(sender, label));
+                });
             }
-            if (sender.getSender().equals(target.getBase()) && target.getWorld() != player.getWorld() && ess.getSettings().isWorldTeleportPermissions() && !target.isAuthorized("essentials.worlds." + target.getWorld().getName())) {
-                continue;
-            }
-            player.getAsyncTeleport().now(loc, false, TeleportCause.COMMAND, getNewExceptionFuture(sender, label));
-        }
+        });
     }
 
     @Override

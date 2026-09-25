@@ -45,7 +45,7 @@ public class Commandptime extends EssentialsLoopCommand {
                 sender.sendTl("pTimePlayers");
             }
             for (final User player : ess.getOnlineUsers()) {
-                getUserTime(sender, player);
+                ess.runOnEntity(player.getBase(), () -> getUserTime(sender, player));
             }
         }
 
@@ -74,16 +74,24 @@ public class Commandptime extends EssentialsLoopCommand {
         final StringJoiner joiner = new StringJoiner(", ");
         loopOnlinePlayersConsumer(server, sender, false, true, args.length > 1 ? args[1] : sender.getSelfSelector(), player -> {
             setUserTime(player, ticks, !fixed);
-            joiner.add(player.getName());
+            synchronized (joiner) {
+                joiner.add(player.getName());
+            }
         });
 
-        if (ticks == null) {
-            sender.sendTl("pTimeReset", joiner.toString());
-            return;
-        }
-
-        final String formattedTime = DescParseTickFormat.format(ticks);
-        sender.sendTl(fixed ? "pTimeSetFixed" : "pTimeSet", AdventureUtil.parsed(formattedTime), joiner.toString());
+        final Long appliedTicks = ticks;
+        ess.scheduleGlobalDelayedTask(() -> {
+            final String names;
+            synchronized (joiner) {
+                names = joiner.toString();
+            }
+            if (appliedTicks == null) {
+                sender.sendTl("pTimeReset", names);
+                return;
+            }
+            final String formattedTime = DescParseTickFormat.format(appliedTicks);
+            sender.sendTl(fixed ? "pTimeSetFixed" : "pTimeSet", AdventureUtil.parsed(formattedTime), names);
+        }, 2);
     }
 
     public void getUserTime(final CommandSource sender, final IUser user) {

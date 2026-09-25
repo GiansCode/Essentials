@@ -107,8 +107,12 @@ public class CommandFilters implements IConf {
         return getFilter(label, type, filter -> filter.hasCost() && !user.isAuthorized("essentials.nocommandcost." + filter.getName()));
     }
 
-    private CommandFilter getFilter(final String label, CommandFilter.Type type, Predicate<CommandFilter> filterPredicate) {
-        for (CommandFilter filter : commandFilters.get(type)) {
+    private CommandFilter getFilter(final String label, final CommandFilter.Type type, final Predicate<CommandFilter> filterPredicate) {
+        final List<CommandFilter> filters = commandFilters.get(type);
+        if (filters == null) {
+            return null;
+        }
+        for (final CommandFilter filter : filters) {
             if (!filterPredicate.test(filter)) continue;
 
             final boolean matches = filter.getPattern().matcher(label).matches();

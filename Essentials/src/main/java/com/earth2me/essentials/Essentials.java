@@ -169,6 +169,7 @@ public class Essentials extends JavaPlugin implements net.ess3.api.IEssentials {
     public static boolean TESTING = false;
     private final transient TNTExplodeListener tntListener = new TNTExplodeListener();
     private final transient Set<String> vanishedPlayers = new LinkedHashSet<>();
+    private final transient VanishVisibility vanishVisibility = new VanishVisibility(this);
     private final transient Map<String, IEssentialsCommand> commandMap = new HashMap<>();
     private final transient ProviderFactory providerFactory = new ProviderFactory(this);
     private transient ISettings settings;
@@ -568,7 +569,20 @@ public class Essentials extends JavaPlugin implements net.ess3.api.IEssentials {
     }
 
     @Override
+    public void updateVanishVisibility(final Player player, final boolean vanished) {
+        vanishVisibility.update(player, vanished);
+    }
+
+    @Override
+    public void concealVanishedPlayers(final Player viewer) {
+        vanishVisibility.concealFrom(viewer);
+    }
+
+    @Override
     public void onDisable() {
+        if (vanishVisibility != null) {
+            vanishVisibility.showImmediately();
+        }
         if (adventureFacet != null) {
             adventureFacet.close();
         }
@@ -1250,22 +1264,25 @@ public class Essentials extends JavaPlugin implements net.ess3.api.IEssentials {
         }
 
         for (final User user : getOnlineUsers()) {
-            if (sender != null && user.isIgnoredPlayer(sender)) {
-                continue;
-            }
+            final User recipient = user;
+            runOnEntity(recipient.getBase(), () -> {
+                if (sender != null && recipient.isIgnoredPlayer(sender)) {
+                    return;
+                }
 
-            if (shouldExclude != null && shouldExclude.test(user)) {
-                continue;
-            }
+                if (shouldExclude != null && shouldExclude.test(recipient)) {
+                    return;
+                }
 
-            final Object[] processedArgs;
-            if (parseKeywords) {
-                processedArgs = I18n.mutateArgs(args, s -> new KeywordReplacer(new SimpleTextInput(s.toString()), new CommandSource(this, user.getBase()), this, false).getLines().get(0));
-            } else {
-                processedArgs = args;
-            }
+                final Object[] processedArgs;
+                if (parseKeywords) {
+                    processedArgs = I18n.mutateArgs(args, s -> new KeywordReplacer(new SimpleTextInput(s.toString()), new CommandSource(this, recipient.getBase()), this, false).getLines().get(0));
+                } else {
+                    processedArgs = args;
+                }
 
-            user.sendTl(tlKey, processedArgs);
+                recipient.sendTl(tlKey, processedArgs);
+            });
         }
     }
 

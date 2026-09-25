@@ -121,7 +121,13 @@ public class ModernUserMap extends CacheLoader<UUID, User> implements IUserMap {
             return null;
         }
 
-        final User user = getUser(uuidCache.getCachedUUID(name));
+        User user = getUser(uuidCache.getCachedUUID(name));
+        if (user == null) {
+            final Player online = ess.getServer().getPlayerExact(name);
+            if (online != null) {
+                user = getUser(online);
+            }
+        }
         if (user != null && user.getBase() instanceof OfflinePlayerStub) {
             if (user.getLastAccountName() != null) {
                 ((OfflinePlayerStub) user.getBase()).setName(user.getLastAccountName());

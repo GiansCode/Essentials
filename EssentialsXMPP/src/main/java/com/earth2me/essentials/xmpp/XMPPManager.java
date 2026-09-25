@@ -320,7 +320,7 @@ public class XMPPManager extends Handler implements MessageListener, ChatManager
             } else {
                 final String from = "[" + parent.getUserByAddress(StringUtils.parseBareAddress(chat.getParticipant())) + ">";
                 for (final Player p : matches) {
-                    p.sendMessage(from + p.getDisplayName() + "]  " + message);
+                    parent.getEss().scheduleEntityDelayedTask(p, () -> p.sendMessage(from + p.getDisplayName() + "]  " + message));
                 }
             }
         }
@@ -328,7 +328,7 @@ public class XMPPManager extends Handler implements MessageListener, ChatManager
 
     private void sendCommand(final Chat chat, final String message) {
         if (config.getList("op-users", String.class).contains(StringUtils.parseBareAddress(chat.getParticipant()))) {
-            parent.getServer().getScheduler().runTask(parent, () -> {
+            parent.getEss().scheduleGlobalDelayedTask(() -> {
                 try {
                     parent.getServer().dispatchCommand(Console.getInstance().getCommandSender(), message.substring(1));
                 } catch (final Exception ex) {

@@ -11,15 +11,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockbukkit.mockbukkit.MockBukkit;
 
-import java.util.AbstractMap;
 import java.util.Collections;
-import java.util.Date;
-import java.util.regex.Pattern;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -30,7 +25,8 @@ public class EssentialsPlayerListenerTest {
     private ISettings settings;
     private User user;
     private Player player;
-    private Pattern cooldownPattern;
+    private CommandFilters commandFilters;
+    private CommandFilter cooldownFilter;
     private EssentialsPlayerListener listener;
 
     @BeforeEach
@@ -42,11 +38,14 @@ public class EssentialsPlayerListenerTest {
         final Server commandServer = mock(Server.class);
         final PluginCommand pluginCommand = mock(PluginCommand.class);
         final KnownCommandsProvider knownCommandsProvider = mock(KnownCommandsProvider.class);
-        cooldownPattern = Pattern.compile("feed");
+        commandFilters = mock(CommandFilters.class);
+        cooldownFilter = mock(CommandFilter.class);
 
         when(ess.getServer()).thenReturn(commandServer);
         when(ess.getSettings()).thenReturn(settings);
         when(ess.getUser(player)).thenReturn(user);
+        when(ess.getCommandFilters()).thenReturn(commandFilters);
+        when(commandFilters.getCommandCooldown(user, "feed", CommandFilter.Type.REGEX)).thenReturn(cooldownFilter);
         when(ess.provider(KnownCommandsProvider.class)).thenReturn(knownCommandsProvider);
         when(knownCommandsProvider.getKnownCommands()).thenReturn(Collections.singletonMap("efeed", pluginCommand));
         when(commandServer.getPluginCommand("efeed")).thenReturn(pluginCommand);
@@ -54,7 +53,6 @@ public class EssentialsPlayerListenerTest {
         when(settings.getSocialSpyCommands()).thenReturn(Collections.emptySet());
         when(settings.getMuteCommands()).thenReturn(Collections.emptySet());
         when(settings.isCommandCooldownsEnabled()).thenReturn(true);
-        when(settings.getCommandCooldownEntry("feed")).thenReturn(new AbstractMap.SimpleImmutableEntry<>(cooldownPattern, 60_000L));
         when(user.getCommandCooldowns()).thenReturn(Collections.emptyMap());
         listener = new EssentialsPlayerListener(ess);
     }
@@ -68,15 +66,15 @@ public class EssentialsPlayerListenerTest {
     public void testUnregisteredCaseVariantDoesNotStartCooldown() {
         listener.onPlayerCommandPreprocess(new PlayerCommandPreprocessEvent(player, "/EFEED"));
 
-        verify(settings, never()).getCommandCooldownEntry(anyString());
-        verify(user, never()).addCommandCooldown(any(Pattern.class), any(Date.class), anyBoolean());
+        verify(commandFilters, never()).getCommandCooldown(any(), anyString(), any());
+        verify(cooldownFilter, never()).applyCooldownTo(any());
     }
 
     @Test
     public void testRegisteredAliasStartsCanonicalCommandCooldown() {
         listener.onPlayerCommandPreprocess(new PlayerCommandPreprocessEvent(player, "/efeed"));
 
-        verify(settings).getCommandCooldownEntry("feed");
-        verify(user).addCommandCooldown(eq(cooldownPattern), any(Date.class), eq(false));
+        verify(commandFilters).getCommandCooldown(user, "feed", CommandFilter.Type.REGEX);
+        verify(cooldownFilter).applyCooldownTo(user);
     }
 }

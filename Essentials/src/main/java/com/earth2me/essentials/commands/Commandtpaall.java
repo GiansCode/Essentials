@@ -29,34 +29,41 @@ public class Commandtpaall extends EssentialsCommand {
 
     private void tpaAll(final CommandSource sender, final User target) {
         sender.sendTl("teleportAAll");
-        for (final User player : ess.getOnlineUsers()) {
-            if (target == player) {
-                continue;
-            }
-            if (!player.isTeleportEnabled()) {
-                continue;
-            }
-            if (sender.getSender().equals(target.getBase()) && target.getWorld() != player.getWorld() && ess.getSettings().isWorldTeleportPermissions() && !target.isAuthorized("essentials.worlds." + target.getWorld().getName())) {
-                continue;
-            }
-
-            try {
-                final TPARequestEvent tpaEvent = new TPARequestEvent(sender, player, true);
-                ess.getServer().getPluginManager().callEvent(tpaEvent);
-                if (tpaEvent.isCancelled()) {
-                    sender.sendTl("teleportRequestCancelled", player.getDisplayName());
+        ess.runOnEntity(target.getBase(), () -> {
+            final String targetWorld = target.getWorld().getName();
+            final boolean checkWorldPerms = sender.getSender().equals(target.getBase()) && ess.getSettings().isWorldTeleportPermissions();
+            final boolean allowedWorld = !checkWorldPerms || target.isAuthorized("essentials.worlds." + targetWorld);
+            for (final User player : ess.getOnlineUsers()) {
+                if (target == player) {
                     continue;
                 }
-                player.requestTeleport(target, true);
-                player.sendTl("teleportHereRequest", target.getDisplayName());
-                player.sendTl("typeTpaccept");
-                if (ess.getSettings().getTpaAcceptCancellation() != 0) {
-                    player.sendTl("teleportRequestTimeoutInfo", ess.getSettings().getTpaAcceptCancellation());
-                }
-            } catch (final Exception ex) {
-                ess.showError(sender, ex, getName());
+                ess.runOnEntity(player.getBase(), () -> {
+                    if (!player.isTeleportEnabled()) {
+                        return;
+                    }
+                    if (checkWorldPerms && !allowedWorld && !player.getWorld().getName().equals(targetWorld)) {
+                        return;
+                    }
+
+                    try {
+                        final TPARequestEvent tpaEvent = new TPARequestEvent(sender, player, true);
+                        ess.getServer().getPluginManager().callEvent(tpaEvent);
+                        if (tpaEvent.isCancelled()) {
+                            sender.sendTl("teleportRequestCancelled", player.getDisplayName());
+                            return;
+                        }
+                        player.requestTeleport(target, true);
+                        player.sendTl("teleportHereRequest", target.getDisplayName());
+                        player.sendTl("typeTpaccept");
+                        if (ess.getSettings().getTpaAcceptCancellation() != 0) {
+                            player.sendTl("teleportRequestTimeoutInfo", ess.getSettings().getTpaAcceptCancellation());
+                        }
+                    } catch (final Exception ex) {
+                        ess.showError(sender, ex, getName());
+                    }
+                });
             }
-        }
+        });
     }
 
     @Override

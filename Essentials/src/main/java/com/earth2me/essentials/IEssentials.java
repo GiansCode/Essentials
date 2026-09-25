@@ -139,6 +139,17 @@ public interface IEssentials extends Plugin {
 
     void ensureGlobal(Runnable runnable);
 
+    /**
+     * Runs on the entity's region thread. On a normal server that is the main thread, so this stays inline.
+     */
+    default void runOnEntity(Entity entity, Runnable runnable) {
+        if (entity == null || isEntityThread(entity)) {
+            runnable.run();
+            return;
+        }
+        scheduleEntityDelayedTask(entity, runnable);
+    }
+
     PermissionsHandler getPermissionsHandler();
 
     AlternativeCommandsHandler getAlternativeCommandsHandler();
@@ -157,6 +168,17 @@ public interface IEssentials extends Plugin {
     EssentialsTimer getTimer();
 
     MailService getMail();
+
+    /**
+     * Updates who can see a player after they vanish or reappear.
+     * Viewers who should see them are hidden and shown again a few ticks later, so the client receives a new spawn packet.
+     */
+    void updateVanishVisibility(Player player, boolean vanished);
+
+    /**
+     * Hides currently vanished players from a viewer who lacks essentials.vanish.see.
+     */
+    void concealVanishedPlayers(Player viewer);
 
     /**
      * Get a list of players who are vanished.

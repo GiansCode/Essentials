@@ -54,7 +54,7 @@ public class Commandpweather extends EssentialsLoopCommand {
                 sender.sendTl("pWeatherPlayers");
             }
             for (final User player : ess.getOnlineUsers()) {
-                getUserWeather(sender, player);
+                ess.runOnEntity(player.getBase(), () -> getUserWeather(sender, player));
             }
         }
 
@@ -71,15 +71,22 @@ public class Commandpweather extends EssentialsLoopCommand {
         final StringJoiner joiner = new StringJoiner(", ");
         loopOnlinePlayersConsumer(server, sender, false, true, args.length > 1 ? args[1] : sender.getSelfSelector(), player -> {
             setUserWeather(player, weather);
-            joiner.add(player.getName());
+            synchronized (joiner) {
+                joiner.add(player.getName());
+            }
         });
 
-        if (weather.equalsIgnoreCase("reset")) {
-            sender.sendTl("pWeatherReset", joiner.toString());
-            return;
-        }
-
-        sender.sendTl("pWeatherSet", weather, joiner.toString());
+        ess.scheduleGlobalDelayedTask(() -> {
+            final String names;
+            synchronized (joiner) {
+                names = joiner.toString();
+            }
+            if (weather.equalsIgnoreCase("reset")) {
+                sender.sendTl("pWeatherReset", names);
+                return;
+            }
+            sender.sendTl("pWeatherSet", weather, names);
+        }, 2);
     }
 
     private void getUserWeather(final CommandSource sender, final IUser user) {

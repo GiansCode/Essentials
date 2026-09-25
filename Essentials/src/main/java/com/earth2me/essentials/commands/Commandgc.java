@@ -36,20 +36,26 @@ public class Commandgc extends EssentialsCommand {
 
         final List<World> worlds = server.getWorlds();
         final WorldTileEntityCountProvider worldTileEntityCountProvider = ess.provider(WorldTileEntityCountProvider.class);
-        for (final World w : worlds) {
-            String worldType = "World";
-            switch (w.getEnvironment()) {
-                case NETHER:
-                    worldType = "Nether";
-                    break;
-                case THE_END:
-                    worldType = "The End";
-                    break;
+        final Runnable reportWorlds = () -> {
+            for (final World w : worlds) {
+                String worldType = "World";
+                switch (w.getEnvironment()) {
+                    case NETHER:
+                        worldType = "Nether";
+                        break;
+                    case THE_END:
+                        worldType = "The End";
+                        break;
+                }
+
+                final int tileEntities = worldTileEntityCountProvider.getTileEntityCount(w);
+                sender.sendTl("gcWorld", worldType, w.getName(), w.getLoadedChunks().length, w.getEntities().size(), tileEntities);
             }
-
-            final int tileEntities = worldTileEntityCountProvider.getTileEntityCount(w);
-
-            sender.sendTl("gcWorld", worldType, w.getName(), w.getLoadedChunks().length, w.getEntities().size(), tileEntities);
+        };
+        if (ess.isGlobalThread()) {
+            reportWorlds.run();
+        } else {
+            ess.scheduleGlobalDelayedTask(reportWorlds);
         }
     }
 }

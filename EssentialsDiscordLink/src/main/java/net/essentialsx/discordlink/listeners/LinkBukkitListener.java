@@ -14,7 +14,6 @@ import net.essentialsx.api.v2.services.discord.MessageType;
 import net.essentialsx.discord.util.MessageUtil;
 import net.essentialsx.discordlink.DiscordLinkSettings;
 import net.essentialsx.discordlink.EssentialsDiscordLink;
-import org.bukkit.Bukkit;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -35,12 +34,15 @@ public class LinkBukkitListener implements Listener {
     }
 
     /**
-     * Sets the Minecraft nickname for a user based on their Discord member info.
-     * Must be called from the main thread.
-     *
-     * @param user     the Essentials user
-     * @param nickname the nickname to set, or null to clear
+     * Sets the Minecraft nickname on the player's region thread.
      */
+    private void syncNicknameOnEntity(final IUser user, final String nickname) {
+        if (user == null || user.getBase() == null || !user.getBase().isOnline()) {
+            return;
+        }
+        ess.getEss().runOnEntity(user.getBase(), () -> syncNickname(user, nickname));
+    }
+
     private void syncNickname(final IUser user, final String nickname) {
         final NickChangeEvent nickEvent = new NickChangeEvent(user, user, nickname);
         ess.getServer().getPluginManager().callEvent(nickEvent);
@@ -159,20 +161,23 @@ public class LinkBukkitListener implements Listener {
                 }
 
                 final String nickname = getEffectiveNickname(member);
-                ess.getEss().scheduleInitTask(() -> syncNickname(event.getUser(), nickname));
+                syncNicknameOnEntity(event.getUser(), nickname);
             });
         }
 
         // Handle freeze policy for unlinked players
         if (ess.getSettings().getLinkPolicy() == DiscordLinkSettings.LinkPolicy.FREEZE && !isLinked) {
-            event.getUser().setFreeze(true);
-            String code;
+            String generated;
             try {
-                code = ess.getLinkManager().createCode(uuid);
-            } catch (IllegalArgumentException e) {
-                code = e.getMessage();
+                generated = ess.getLinkManager().createCode(uuid);
+            } catch (final IllegalArgumentException e) {
+                generated = e.getMessage();
             }
-            event.getUser().sendTl("discordLinkLoginPrompt", "/link " + code, ess.getApi().getInviteUrl());
+            final String promptCode = generated;
+            ess.getEss().runOnEntity(event.getUser().getBase(), () -> {
+                event.getUser().setFreeze(true);
+                event.getUser().sendTl("discordLinkLoginPrompt", "/link " + promptCode, ess.getApi().getInviteUrl());
+            });
         }
     }
 
@@ -201,7 +206,7 @@ public class LinkBukkitListener implements Listener {
         }
 
         final String nickname = getEffectiveNickname(event.getMember());
-        ess.getEss().scheduleInitTask(() -> syncNickname(user, nickname));
+        syncNicknameOnEntity(user, nickname);
     }
 
     @EventHandler
@@ -215,17 +220,13 @@ public class LinkBukkitListener implements Listener {
                 nickname = null;
             }
 
-            if (Bukkit.isPrimaryThread()) {
-                syncNickname(event.getUser(), nickname);
-            } else {
-                ess.getEss().scheduleInitTask(() -> syncNickname(event.getUser(), nickname));
-            }
+            syncNicknameOnEntity(event.getUser(), nickname);
         }
 
         // Handle freeze/unfreeze based on link status
         if (event.isLinked() || ess.getSettings().getLinkPolicy() == DiscordLinkSettings.LinkPolicy.NONE) {
-            if (event.getUser() != null) {
-                event.getUser().setFreeze(false);
+            if (event.getUser() != null && event.getUser().getBase() != null && event.getUser().getBase().isOnline()) {
+                ess.getEss().runOnEntity(event.getUser().getBase(), () -> event.getUser().setFreeze(false));
             }
             return;
         }
@@ -245,16 +246,14 @@ public class LinkBukkitListener implements Listener {
         switch (ess.getSettings().getLinkPolicy()) {
             case KICK: {
                 final Runnable kickTask = () -> event.getUser().getBase().kickPlayer(ess.getEss().getAdventureFacet().miniToLegacy(event.getUser().playerTl("discordLinkLoginKick", "/link " + finalCode, ess.getApi().getInviteUrl())));
-                if (Bukkit.isPrimaryThread()) {
-                    kickTask.run();
-                } else {
-                    ess.getEss().scheduleEntityDelayedTask(event.getUser().getBase(), kickTask);
-                }
+                ess.getEss().runOnEntity(event.getUser().getBase(), kickTask);
                 break;
             }
             case FREEZE: {
-                event.getUser().sendTl("discordLinkLoginPrompt", "/link " + code, ess.getApi().getInviteUrl());
-                event.getUser().setFreeze(true);
+                ess.getEss().runOnEntity(event.getUser().getBase(), () -> {
+                    event.getUser().sendTl("discordLinkLoginPrompt", "/link " + finalCode, ess.getApi().getInviteUrl());
+                    event.getUser().setFreeze(true);
+                });
                 break;
             }
             default: {

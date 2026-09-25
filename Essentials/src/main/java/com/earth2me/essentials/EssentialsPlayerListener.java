@@ -332,7 +332,7 @@ public class EssentialsPlayerListener implements Listener {
         }
 
         // Note: getController() returns the vanished player due to a long-standing parameter swap in Commandvanish.
-        User user = (User) event.getController();
+        final User user = (User) event.getController();
 
         if (event.getValue()) {
             String quitMessage = ChatColor.YELLOW + user.getName() + " left the game";
@@ -473,17 +473,7 @@ public class EssentialsPlayerListener implements Listener {
         updateCompass(user);
         user.setLeavingHidden(false);
 
-        if (!ess.getVanishedPlayersNew().isEmpty() && !user.isAuthorized("essentials.vanish.see")) {
-            for (final String p : ess.getVanishedPlayersNew()) {
-                final Player toVanish = ess.getServer().getPlayerExact(p);
-                if (toVanish != null && toVanish.isOnline()) {
-                    user.getBase().hidePlayer(toVanish);
-                    if (ess.getSettings().isDebug()) {
-                        ess.getLogger().info("Hiding vanished player: " + p);
-                    }
-                }
-            }
-        }
+        ess.concealVanishedPlayers(user.getBase());
 
         if (user.isAuthorized("essentials.sleepingignored")) {
             user.getBase().setSleepingIgnored(true);
