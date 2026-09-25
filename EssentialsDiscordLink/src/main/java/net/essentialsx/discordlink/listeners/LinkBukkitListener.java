@@ -159,7 +159,7 @@ public class LinkBukkitListener implements Listener {
                 }
 
                 final String nickname = getEffectiveNickname(member);
-                ess.getEss().scheduleSyncDelayedTask(() -> syncNickname(event.getUser(), nickname));
+                ess.getEss().scheduleInitTask(() -> syncNickname(event.getUser(), nickname));
             });
         }
 
@@ -201,7 +201,7 @@ public class LinkBukkitListener implements Listener {
         }
 
         final String nickname = getEffectiveNickname(event.getMember());
-        ess.getEss().scheduleSyncDelayedTask(() -> syncNickname(user, nickname));
+        ess.getEss().scheduleInitTask(() -> syncNickname(user, nickname));
     }
 
     @EventHandler
@@ -218,7 +218,7 @@ public class LinkBukkitListener implements Listener {
             if (Bukkit.isPrimaryThread()) {
                 syncNickname(event.getUser(), nickname);
             } else {
-                ess.getEss().scheduleSyncDelayedTask(() -> syncNickname(event.getUser(), nickname));
+                ess.getEss().scheduleInitTask(() -> syncNickname(event.getUser(), nickname));
             }
         }
 

@@ -149,7 +149,7 @@ public class Commandhome extends EssentialsCommand {
             throw new TranslatableException("noPerm", "essentials.worlds." + loc.getWorld().getName());
         }
         if(!isUserHomeInWorldOrWorldGroupWorld(user.getWorld().getName(), Objects.requireNonNull(loc.getWorld()).getName())) {
-            throw new Exception(tl("teleportNotPossible"));
+            throw new TranslatableException("teleportNotPossible");
         }
         final UserTeleportHomeEvent event = new UserTeleportHomeEvent(user, home, loc, UserTeleportHomeEvent.HomeType.HOME);
         user.getServer().getPluginManager().callEvent(event);

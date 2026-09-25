@@ -2,6 +2,7 @@ package com.earth2me.essentials;
 
 import net.ess3.api.IEssentials;
 import net.ess3.api.IUser;
+import net.ess3.provider.SchedulingProvider;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 
@@ -21,7 +22,7 @@ public class AsyncTimedCommand implements Runnable {
     private final String timer_command;
     private final Pattern timer_pattern;
     private final boolean timer_canMove;
-    private volatile int timer_task;
+    private volatile SchedulingProvider.EssentialsTask timer_task;
     private volatile double timer_health;
 
     AsyncTimedCommand(final IUser user, final IEssentials ess, final long delay, final String command, final Pattern pattern) {
@@ -46,7 +47,7 @@ public class AsyncTimedCommand implements Runnable {
         this.timer_pattern = pattern;
         this.timer_canMove = user.isAuthorized("essentials.commandwarmups.move");
 
-        timer_task = ess.runTaskTimerAsynchronously(this, 20, 20).getTaskId();
+        timer_task = ess.runTaskTimerAsynchronously(this, 20, 20);
     }
 
     @Override
@@ -101,26 +102,29 @@ public class AsyncTimedCommand implements Runnable {
                                 ess.showError(user.getSource(), ex, "\\ command warmup");
                             }
                         });
+                    } catch (final Exception ex) {
+                        ess.showError(user.getSource(), ex, "\\ command warmup");
+                    }
                 }
             }
         }
 
-        ess.scheduleSyncDelayedTask(new DelayedCommandTask());
+        ess.scheduleEntityDelayedTask(commandUser.getBase(), new DelayedCommandTask());
     }
 
     void cancelTimer(final boolean notifyUser) {
-        if (timer_task == -1) {
+        if (timer_task == null) {
             return;
         }
         try {
-            ess.getServer().getScheduler().cancelTask(timer_task);
+            timer_task.cancel();
             if (notifyUser) {
                 commandUser.sendTl("commandWarmupCancelled");
             }
             // Clear the warmup from the user's data
             commandUser.clearCommandWarmup(timer_pattern);
         } finally {
-            timer_task = -1;
+            timer_task = null;
         }
     }
 }

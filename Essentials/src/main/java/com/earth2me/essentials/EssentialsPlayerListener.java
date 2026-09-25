@@ -928,7 +928,7 @@ public class EssentialsPlayerListener implements Listener {
 
                     final BigDecimal cost = costFilter.getCost();
                     if (!user.canAfford(cost) && cost.signum() > 0) {
-                        player.sendMessage(tl("notEnoughMoney", NumberUtil.displayCurrency(cost, ess)));
+                        user.sendTl("notEnoughMoney", NumberUtil.displayCurrency(cost, ess));
                         event.setCancelled(true);
                         return;
                     }

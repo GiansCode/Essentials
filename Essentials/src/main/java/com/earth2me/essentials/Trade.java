@@ -332,7 +332,7 @@ public class Trade {
                 ess.getLogger().log(Level.INFO, "charging user " + user.getName() + " itemgroup " +getItemGroupQuery().toString());
             }
             if (!Inventories.containsAtLeast(user.getBase(), ess, getItemGroupQuery())) {
-                future.completeExceptionally(new ChargeException(tl("missingItems", getItemGroupQuery().getAmount(), "~"+getItemGroupQuery().getItemGroup().toLowerCase(Locale.ENGLISH).replace("_", " "))));
+                future.completeExceptionally(new ChargeException("missingItems", getItemGroupQuery().getAmount(), "~" + getItemGroupQuery().getItemGroup().toLowerCase(Locale.ENGLISH).replace("_", " ")));
                 return;
             }
             Inventories.removeItemAmount(user.getBase(), ess, getItemGroupQuery());
