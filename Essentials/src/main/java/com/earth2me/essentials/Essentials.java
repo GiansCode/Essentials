@@ -193,6 +193,7 @@ public class Essentials extends JavaPlugin implements net.ess3.api.IEssentials {
     private transient ProviderListener recipeBookEventProvider;
     private transient Kits kits;
     private transient ItemGroups itemGroups;
+    private transient CommandFilters commandFilters;
     private transient RandomTeleport randomTeleport;
     private transient UpdateChecker updateChecker;
     private transient AdventureFacet adventureFacet;
@@ -310,6 +311,11 @@ public class Essentials extends JavaPlugin implements net.ess3.api.IEssentials {
             randomTeleport = new RandomTeleport(this);
             confList.add(randomTeleport);
             execTimer.mark("Init(RandomTeleport)");
+
+            commandFilters = new CommandFilters(this);
+            confList.add(commandFilters);
+            upgrade.convertCommandFilters();
+            execTimer.mark("CommandFilters");
 
             upgrade.afterSettings();
             execTimer.mark("Upgrade3");
@@ -959,6 +965,11 @@ public class Essentials extends JavaPlugin implements net.ess3.api.IEssentials {
     @Override
     public Kits getKits() {
         return kits;
+    }
+
+    @Override
+    public CommandFilters getCommandFilters() {
+        return commandFilters;
     }
 
     @Override

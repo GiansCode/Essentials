@@ -721,6 +721,7 @@ world-time-permissions: false
 # For example, to target commands starting with "ban" but not "banip", use:
 #  '^ban([^ip])( .*)?': 60 # 60-second /ban cooldown
 # Note: If you have a command that starts with ^, escape it using a backslash (\). E.g., \^command: 123
+# These entries are also copied into command-filters.yml on upgrade.
 command-cooldowns:
   #feed: 100 # 100-second cooldown on /feed command
   #'*': 5 # 5-second cooldown on all commands
@@ -905,6 +906,7 @@ starting-balance: 0
 
 # Defines the cost to use the given commands PER USE.
 # Some commands like /repair have sub-costs. Check the wiki for more information.
+# These entries are also copied into command-filters.yml on upgrade.
 command-costs:
   # To make /example cost $1000 PER USE:
   #example: 1000
