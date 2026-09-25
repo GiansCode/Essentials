@@ -192,6 +192,7 @@ public class Essentials extends JavaPlugin implements net.ess3.api.IEssentials {
     private transient EssentialsTimer timer;
     private transient ProviderListener recipeBookEventProvider;
     private transient Kits kits;
+    private transient ItemGroups itemGroups;
     private transient RandomTeleport randomTeleport;
     private transient UpdateChecker updateChecker;
     private transient AdventureFacet adventureFacet;
@@ -338,6 +339,10 @@ public class Essentials extends JavaPlugin implements net.ess3.api.IEssentials {
             jails = new Jails(this);
             confList.add(jails);
             execTimer.mark("Init(Jails)");
+
+            itemGroups = new ItemGroups(this);
+            confList.add(itemGroups);
+            execTimer.mark("Init(ItemGroups)");
 
             // Spawner item provider only uses one, but it's here for legacy...
             providerFactory.registerProvider(BlockMetaSpawnerItemProvider.class);
