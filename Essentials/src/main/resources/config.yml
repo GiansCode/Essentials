@@ -867,9 +867,28 @@ spawn-if-no-home: true
 # Should players be asked to provide confirmation for homes they attempt to overwrite?
 confirm-home-overwrite: false
 
-# Block /sethome and /home for players over their home limit, suggesting  /delhome usage
+# Block /sethome and /home for players over their home limit, suggesting /delhome usage.
 # When set to false, players with more homes than permitted can overwrite existing home names and still use /home.
 strict-home-limit: false
+
+# This setting enables a separate home limit for each world.
+# For example, a player can have 3 homes in world, 3 in world_nether, and 3 in world_the_end.
+home-limit-per-world: false
+
+# When home-limit-per-world is enabled, the higher of sethome-multiple and the world limit is used.
+# If a world is not listed here, sethome-multiple.default is used.
+homes-per-world:
+  world: 5
+  world_the_end: 2
+
+# Requires home-limit-per-world. Worlds in a group share one home limit.
+# Worlds are split by a comma, as shown below.
+home-limit-per-world-group: false
+
+homes-per-world-group:
+  player-worlds:
+    worlds: world,world_nether
+    home-limit: 4
 
 ############################################################
 # +------------------------------------------------------+ #
