@@ -433,6 +433,8 @@ public interface ISettings extends IConf {
 
     boolean isConfirmHomeOverwrite();
 
+    boolean isStrictHomeLimit();
+
     boolean infoAfterDeath();
 
     boolean isRespawnAtBed();
